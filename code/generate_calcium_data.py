@@ -41,17 +41,16 @@ def run_calcium_simulation(net_base, calcium_scale, tstop, seed):
     add_calcium_drives(net, seed)
     scale_calcium(net, calcium_scale)
 
-    dpl = simulate_dipole(net, tstop=tstop, dt=0.5)
+    dpl = simulate_dipole(net, tstop=tstop, n_trials=1)
     return net, dpl
 
 # === Simulation setup ===
-n_trials = 10
+n_trials = 50
 tstop = 450
 data_path = '../data/calcium_simulations'
 
 hnn_core_root = op.dirname(hnn_core.__file__)
-params_fname = op.join(hnn_core_root, 'param', 'default.json')
-# params_fname = 'L_Contra.param'
+params_fname = '../data/L_Contra.param'
 params = read_params(params_fname)
 
 # === Build network variants with different calcium scaling ===
