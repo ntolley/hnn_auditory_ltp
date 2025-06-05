@@ -2,7 +2,7 @@ import os.path as op
 import numpy as np
 
 import hnn_core
-from hnn_core import calcium_model, simulate_dipole, read_params
+from hnn_core import calcium_model, simulate_dipole, read_params, pick_connection
 from joblib import Parallel, delayed
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -32,10 +32,10 @@ def scale_connectivity(net, scale_factor=1.0):
     """Multiple AMPA and NMDA conductances by scale factor"""
     conn_indices = pick_connection(net, src_gids=['L2_pyramidal', 'L5_pyramidal'], receptor='ampa')
     for conn_idx in conn_indices:
-        net.connectivity[conn_idx]['nc_dict']['A_weight'] *= ampa_value
+        net.connectivity[conn_idx]['nc_dict']['A_weight'] *= scale_factor
     conn_indices = pick_connection(net, src_gids=['L2_pyramidal', 'L5_pyramidal'], receptor='nmda')
     for conn_idx in conn_indices:
-        net.connectivity[conn_idx]['nc_dict']['A_weight'] *= nmda_value
+        net.connectivity[conn_idx]['nc_dict']['A_weight'] *= scale_factor
 
 def run_connectivity_simulation(net_base, connectivity_scale, tstop, seed):
     net = net_base.copy()
@@ -66,7 +66,7 @@ res = Parallel(n_jobs=n_trials)(
     delayed(run_connectivity_simulation)(net_base, scale, tstop, seed_idx) for seed_idx, scale in enumerate(connectivity_sweep))
 
 dpl_dict = {
-    'trial': np.tile(np.arange(n_trials), (len(calcium_list))),
+    'trial': np.tile(np.arange(n_trials), (len(connectivity_list))),
     'connectivity_scale': connectivity_sweep,
     'dpl': [res[sim_idx][1][0].copy().smooth(30).scale(1500).data['agg'] for sim_idx in range(len(res))],
     'spike_times': [res[sim_idx][0].cell_response.spike_times for sim_idx in range(len(res))],
